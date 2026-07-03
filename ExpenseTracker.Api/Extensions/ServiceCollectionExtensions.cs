@@ -61,6 +61,8 @@ namespace ExpenseTracker.Api.Extensions
                 });
             });
 
+            services.AddEndpointsApiExplorer();
+
             // Swagger
             services.AddSwaggerGen(c =>
             {
@@ -93,11 +95,12 @@ namespace ExpenseTracker.Api.Extensions
 
         public static IApplicationBuilder UseApplicationMiddleware(this IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
             {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Expense Tracker API v1");
+                c.RoutePrefix = string.Empty;
+            });
 
             app.UseHttpsRedirection();
             app.UseCors("AllowAll");
