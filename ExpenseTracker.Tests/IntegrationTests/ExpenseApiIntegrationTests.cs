@@ -1,77 +1,125 @@
+using System;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using ExpenseTracker.Infrastructure.Data;
+using ExpenseTracker.Application.DTOs;
 using Xunit;
 
 namespace ExpenseTracker.Tests.IntegrationTests
 {
     public class ExpenseApiIntegrationTests : IAsyncLifetime
     {
+        private readonly WebApplicationFactory<Program> _factory;
         private readonly HttpClient _httpClient;
         private string _authToken = string.Empty;
 
         public ExpenseApiIntegrationTests()
         {
-            // Initialize HttpClient with API base address
-            _httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:5000/api/") };
+            _factory = new CustomWebApplicationFactory();
+            _httpClient = _factory.CreateClient();
         }
 
         public async Task InitializeAsync()
         {
-            // Setup: Register and login user before tests
-            // This would create a test user and get an auth token
-            await Task.CompletedTask;
+            var registerData = new
+            {
+                username = "testuser",
+                email = "testuser@example.com",
+                password = "Password123!",
+                firstName = "Test",
+                lastName = "User"
+            };
+
+            var registerResponse = await _httpClient.PostAsJsonAsync("api/auth/register", registerData);
+            registerResponse.EnsureSuccessStatusCode();
+
+            var loginData = new
+            {
+                email = "testuser@example.com",
+                password = "Password123!"
+            };
+
+            var loginResponse = await _httpClient.PostAsJsonAsync("api/auth/login", loginData);
+            loginResponse.EnsureSuccessStatusCode();
+
+            var authResponse = await loginResponse.Content.ReadFromJsonAsync<AuthResponseDto>();
+            _authToken = authResponse?.Token ?? string.Empty;
         }
 
-        public async Task DisposeAsync()
+        public Task DisposeAsync()
         {
-            // Cleanup: Delete test data after tests
             _httpClient.Dispose();
-            await Task.CompletedTask;
+            _factory.Dispose();
+            return Task.CompletedTask;
         }
 
         [Fact]
         public async Task CreateExpense_WithValidData_ReturnsCreatedExpense()
         {
             // Arrange
+            _httpClient.DefaultRequestHeaders.Authorization = 
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _authToken);
+
             var expenseData = new
             {
                 description = "Integration Test Expense",
                 amount = 50.00m,
-                transactionDate = DateTime.Now,
+                transactionDate = DateTime.UtcNow,
                 categoryId = Guid.NewGuid()
             };
 
-            var content = new StringContent(
-                System.Text.Json.JsonSerializer.Serialize(expenseData),
-                System.Text.Encoding.UTF8,
-                "application/json");
-
-            if (!string.IsNullOrEmpty(_authToken))
-            {
-                _httpClient.DefaultRequestHeaders.Authorization = 
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _authToken);
-            }
-
             // Act
-            var response = await _httpClient.PostAsync("expenses", content);
+            var response = await _httpClient.PostAsJsonAsync("api/expenses", expenseData);
 
             // Assert
-            Assert.True(response.IsSuccessStatusCode);
+            response.EnsureSuccessStatusCode();
         }
 
         [Fact]
         public async Task GetAllExpenses_WithAuthenticatedUser_ReturnsExpenses()
         {
             // Arrange
-            if (!string.IsNullOrEmpty(_authToken))
-            {
-                _httpClient.DefaultRequestHeaders.Authorization = 
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _authToken);
-            }
+            _httpClient.DefaultRequestHeaders.Authorization = 
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _authToken);
 
             // Act
-            var response = await _httpClient.GetAsync("expenses");
+            var response = await _httpClient.GetAsync("api/expenses");
 
             // Assert
-            Assert.True(response.IsSuccessStatusCode);
+            response.EnsureSuccessStatusCode();
+        }
+
+        private class CustomWebApplicationFactory : WebApplicationFactory<Program>
+        {
+            protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var dbContextDescriptor = services.SingleOrDefault(
+                        d => d.ServiceType == typeof(DbContextOptions<ExpenseTrackerDbContext>));
+
+                    if (dbContextDescriptor != null)
+                    {
+                        services.Remove(dbContextDescriptor);
+                    }
+
+                    services.AddDbContext<ExpenseTrackerDbContext>(options =>
+                    {
+                        options.UseInMemoryDatabase("ExpenseTrackerTestDb");
+                    });
+
+                    var sp = services.BuildServiceProvider();
+                    using var scope = sp.CreateScope();
+                    var db = scope.ServiceProvider.GetRequiredService<ExpenseTrackerDbContext>();
+                    db.Database.EnsureDeleted();
+                    db.Database.EnsureCreated();
+                });
+            }
         }
     }
 }

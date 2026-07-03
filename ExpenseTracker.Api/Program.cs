@@ -1,16 +1,14 @@
 using ExpenseTracker.Api.Extensions;
-using ExpenseTracker.Application.Validators;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers()
-    .AddFluentValidation(config =>
-    {
-        config.RegisterValidatorsFromAssemblyContaining<CreateExpenseValidator>();
-    });
+builder.Services.AddControllers();
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddFluentValidationClientsideAdapters();
 
 builder.Services.AddApplicationServices(builder.Configuration);
 
@@ -53,3 +51,5 @@ app.UseApplicationMiddleware(app.Environment);
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }

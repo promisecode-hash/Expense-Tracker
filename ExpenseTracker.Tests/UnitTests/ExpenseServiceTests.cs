@@ -1,9 +1,12 @@
+using System;
+using System.Threading.Tasks;
 using Xunit;
 using Moq;
 using AutoMapper;
 using ExpenseTracker.Application.DTOs;
 using ExpenseTracker.Application.Services;
 using ExpenseTracker.Domain.Entities;
+using ExpenseTracker.Domain.Exceptions;
 using ExpenseTracker.Domain.Interfaces;
 
 namespace ExpenseTracker.Tests.UnitTests
@@ -81,7 +84,7 @@ namespace ExpenseTracker.Tests.UnitTests
             };
 
             // Act & Assert
-            await Assert.ThrowsAsync<Exception>(() => _service.CreateExpenseAsync(userId, createDto));
+            await Assert.ThrowsAsync<InvalidExpenseException>(() => _service.CreateExpenseAsync(userId, createDto));
         }
 
         [Fact]
