@@ -1,0 +1,23 @@
+# Git and VCS
+.git
+.gitignore
+
+# Build outputs and local artifacts
+bin/
+obj/
+publish/
+.vs/
+.vscode/
+.idea/
+
+# Test project is not needed for the deployed API image
+ExpenseTracker.Tests/
+
+# OS / editor noise
+*.user
+*.suo
+*.pdb
+*.dll
+*.exe
+.DS_Store
+Thumbs.db

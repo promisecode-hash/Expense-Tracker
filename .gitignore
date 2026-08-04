@@ -1,0 +1,22 @@
+# .NET build outputs
+bin/
+obj/
+publish/
+*.user
+*.suo
+*.pdb
+*.dll
+*.exe
+
+# VS / IDE
+.vs/
+.vscode/
+.idea/
+
+# NuGet
+packages/
+*.nupkg
+
+# OS
+.DS_Store
+Thumbs.db
