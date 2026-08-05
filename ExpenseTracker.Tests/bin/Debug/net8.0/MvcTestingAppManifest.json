@@ -1,6 +1,0 @@
-{
-  "ExpenseTracker.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "C:\\Users\\user\\Documents\\Expense Tracker\\Expense-Tracker\\ExpenseTracker.Api",
-  "ExpenseTracker.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "C:\\Users\\user\\Documents\\Expense Tracker\\Expense-Tracker\\ExpenseTracker.Application",
-  "ExpenseTracker.Domain, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "C:\\Users\\user\\Documents\\Expense Tracker\\Expense-Tracker\\ExpenseTracker.Domain",
-  "ExpenseTracker.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "C:\\Users\\user\\Documents\\Expense Tracker\\Expense-Tracker\\ExpenseTracker.Infrastructure"
-}
